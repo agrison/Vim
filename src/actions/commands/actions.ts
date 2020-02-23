@@ -865,7 +865,7 @@ class CommandOverrideCopy extends BaseCommand {
         })
         .join('\n');
     } else if (vimState.currentMode === Mode.VisualBlock) {
-      for (const { line } of Position.IterateLine(vimState)) {
+      for (const { line } of Position.IterateLinesInCursorBlock(vimState)) {
         text += line + '\n';
       }
     } else if (vimState.currentMode === Mode.Insert || vimState.currentMode === Mode.Normal) {
@@ -3482,7 +3482,7 @@ class ActionReplaceCharacterVisualBlock extends BaseCommand {
       toInsert = TextEditor.getTabCharacter(vimState.editor);
     }
 
-    for (const { start, end } of Position.IterateLine(vimState)) {
+    for (const { start, end } of Position.IterateLinesInCursorBlock(vimState)) {
       if (end.isBeforeOrEqual(start)) {
         continue;
       }
@@ -3520,7 +3520,7 @@ class ActionDeleteVisualBlock extends BaseCommand {
   public async exec(position: Position, vimState: VimState): Promise<VimState> {
     const lines: string[] = [];
 
-    for (const { line, start, end } of Position.IterateLine(vimState)) {
+    for (const { line, start, end } of Position.IterateLinesInCursorBlock(vimState)) {
       lines.push(line);
       vimState.recordedState.transformations.push({
         type: 'deleteRange',
@@ -3556,7 +3556,7 @@ class ActionShiftDVisualBlock extends BaseCommand {
   mightChangeDocument = true;
 
   public async exec(position: Position, vimState: VimState): Promise<VimState> {
-    for (const { start } of Position.IterateLine(vimState)) {
+    for (const { start } of Position.IterateLinesInCursorBlock(vimState)) {
       vimState.recordedState.transformations.push({
         type: 'deleteRange',
         range: new Range(start, start.getLineEnd()),
@@ -3589,7 +3589,7 @@ class ActionGoToInsertVisualBlockMode extends BaseCommand {
     vimState.isMultiCursor = true;
     vimState.isFakeMultiCursor = true;
 
-    for (const { line, start } of Position.IterateLine(vimState)) {
+    for (const { line, start } of Position.IterateLinesInCursorBlock(vimState)) {
       if (line === '' && start.character !== 0) {
         continue;
       }
@@ -3610,7 +3610,7 @@ class ActionChangeInVisualBlockMode extends BaseCommand {
   }
 
   public async exec(position: Position, vimState: VimState): Promise<VimState> {
-    for (const { start, end } of Position.IterateLine(vimState)) {
+    for (const { start, end } of Position.IterateLinesInCursorBlock(vimState)) {
       vimState.recordedState.transformations.push({
         type: 'deleteRange',
         range: new Range(start, end),
@@ -3622,7 +3622,7 @@ class ActionChangeInVisualBlockMode extends BaseCommand {
     vimState.isMultiCursor = true;
     vimState.isFakeMultiCursor = true;
 
-    for (const { start } of Position.IterateLine(vimState)) {
+    for (const { start } of Position.IterateLinesInCursorBlock(vimState)) {
       vimState.cursors.push(new Range(start, start));
     }
     vimState.cursors = vimState.cursors.slice(1);
@@ -3641,7 +3641,7 @@ class ActionChangeToEOLInVisualBlockMode extends BaseCommand {
   }
 
   public async exec(position: Position, vimState: VimState): Promise<VimState> {
-    for (const { start } of Position.IterateLine(vimState)) {
+    for (const { start } of Position.IterateLinesInCursorBlock(vimState)) {
       vimState.recordedState.transformations.push({
         type: 'deleteRange',
         range: new Range(start, start.getLineEnd()),
@@ -3653,7 +3653,7 @@ class ActionChangeToEOLInVisualBlockMode extends BaseCommand {
     vimState.isMultiCursor = true;
     vimState.isFakeMultiCursor = true;
 
-    for (const { end } of Position.IterateLine(vimState)) {
+    for (const { end } of Position.IterateLinesInCursorBlock(vimState)) {
       vimState.cursors.push(new Range(end, end));
     }
     vimState.cursors = vimState.cursors.slice(1);
@@ -3772,7 +3772,7 @@ class ActionGoToInsertVisualBlockModeAppend extends BaseCommand {
     vimState.isMultiCursor = true;
     vimState.isFakeMultiCursor = true;
 
-    for (const { line, end } of Position.IterateLine(vimState)) {
+    for (const { line, end } of Position.IterateLinesInCursorBlock(vimState)) {
       if (line.trim() === '') {
         vimState.recordedState.transformations.push({
           type: 'replaceText',

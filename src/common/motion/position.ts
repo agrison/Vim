@@ -211,24 +211,37 @@ export class Position extends vscode.Position {
   }
 
   /**
+   * Iterate over every line in the block defined by the primary cursor.
+   *
+   * This is intended for visual block mode.
+   */
+  public static *IterateLinesInCursorBlock(
+    vimState: VimState,
+    options: { reverse?: boolean } = { reverse: false }
+  ): Iterable<{ line: string; start: Position; end: Position }> {
+    return this.IterateLinesInBlock(
+      vimState.cursorStartPosition,
+      vimState.cursorStopPosition,
+      vimState.desiredColumn === Number.POSITIVE_INFINITY,
+      options
+    );
+  }
+
+  /**
    * Iterate over every line in the block defined by the two positions passed in.
    *
    * This is intended for visual block mode.
    */
-  public static *IterateLine(
-    vimState: VimState,
+  public static *IterateLinesInBlock(
+    start: Position,
+    stop: Position,
+    runToLineEnd: boolean = false,
     options: { reverse?: boolean } = { reverse: false }
   ): Iterable<{ line: string; start: Position; end: Position }> {
     const { reverse } = options;
-    const start = vimState.cursorStartPosition;
-    const stop = vimState.cursorStopPosition;
 
     const topLeft = visualBlockGetTopLeftPosition(start, stop);
     const bottomRight = visualBlockGetBottomRightPosition(start, stop);
-
-    // Special case for $, which potentially makes the block ragged
-    // on the right side.
-    const runToLineEnd = vimState.desiredColumn === Number.POSITIVE_INFINITY;
 
     const itrStart = reverse ? bottomRight.line : topLeft.line;
     const itrEnd = reverse ? topLeft.line : bottomRight.line;

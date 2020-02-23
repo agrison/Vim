@@ -1260,7 +1260,7 @@ export class ModeHandler implements vscode.Disposable {
         } else if (selectionMode === Mode.VisualBlock) {
           selections = [];
 
-          for (const { start: lineStart, end } of Position.IterateLine(vimState)) {
+          for (const { start: lineStart, end } of Position.IterateLinesInCursorBlock(vimState)) {
             selections.push(new vscode.Selection(lineStart, end));
           }
         } else {
@@ -1277,6 +1277,24 @@ export class ModeHandler implements vscode.Disposable {
               }
 
               selections.push(new vscode.Selection(cursorStart, cursorStop));
+            }
+            break;
+          }
+          case Mode.VisualLine: {
+            selections = vimState.cursors.map((c: Range) => {
+              return new vscode.Selection(c.start.getLineBegin(), c.stop.getLineEnd());
+            });
+            break;
+          }
+          case Mode.VisualBlock: {
+            for (const c of vimState.cursors) {
+              for (const { start: lineStart, end } of Position.IterateLinesInBlock(
+                c.start,
+                c.stop,
+                vimState.desiredColumn === Number.POSITIVE_INFINITY
+              )) {
+                selections.push(new vscode.Selection(lineStart, end));
+              }
             }
             break;
           }
